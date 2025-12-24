@@ -126,8 +126,8 @@ def run_task2_audio():
         rec_rl = rx.receive(fm_noisy_rl, fs_mux)
         l_raw_rl, r_raw_rl = demux.demultiplex(rec_rl, fs_mux)
         
-        l_out_rl = signal.resample(l_raw_rl, N)[cut:]
-        r_out_rl = signal.resample(r_raw_rl, N)[cut:]
+        l_out_rl = signal.resample(l_raw_rl, fs_audio)[cut:]
+        r_out_rl = signal.resample(r_raw_rl, fs_audio)[cut:]
         
         # ii. Measure Separation R->L (Active R / Crosstalk L)
         rms_r_active = np.sqrt(np.mean(r_out_rl**2))
@@ -138,7 +138,7 @@ def run_task2_audio():
         fm_noisy_tone = add_awgn_complex(fm_ref_tone, snr)
         rec_tone = rx.receive(fm_noisy_tone, fs_mux)
         l_raw_tone, _ = demux.demultiplex(rec_tone, fs_mux)
-        l_out_tone = signal.resample(l_raw_tone, N)[cut:]
+        l_out_tone = signal.resample(l_raw_tone, fs_audio)[cut:]
         
         # iii. Measure THD
         val_thd = measure_thd(l_out_tone, fs_audio, freq_target=1000)
