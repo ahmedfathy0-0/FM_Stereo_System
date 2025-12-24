@@ -45,46 +45,32 @@ def add_awgn_complex(signal_in, snr_db):
     
     return (signal_in + noise)
 
-def measure_bandwidth_99(signal_in, fs):
-    """
-    Measure the bandwidth containing 99% of signal power.
+def measure_99_bandwidth(signal_in, fs):
+    """Calculates the 99% Power Bandwidth of a complex signal."""
+    # Use Welch's method for smooth PSD
+    f, Pxx = signal.welch(signal_in, fs, nperseg=2048, return_onesided=False)
     
-    Args:
-        signal_in: Input signal
-        fs: Sampling frequency
-        
-    Returns:
-        bandwidth: Bandwidth in Hz
-        f: Frequency array
-        psd: Power spectral density
-    """
-    # Compute PSD using Welch's method
-    nperseg = min(len(signal_in), 8192)
+    # Shift to center 0 Hz
+    f = np.fft.fftshift(f)
+    Pxx = np.fft.fftshift(Pxx)
     
-    # Check if complex (FM signal is complex baseband)
-    if np.iscomplexobj(signal_in):
-        f, psd = signal.welch(signal_in, fs, nperseg=nperseg, return_onesided=False)
-        # Shift zero frequency to center for correct ordering
-        f = np.fft.fftshift(f)
-        psd = np.fft.fftshift(psd)
-    else:
-        f, psd = signal.welch(signal_in, fs, nperseg=nperseg)
+    total_power = np.sum(Pxx)
+    target_power = 0.99 * total_power
     
-    # Total power
-    total_power = np.sum(psd)
+    # Cumulative sum from center outwards is hard, 
+    # simpler to do cumulative sum from left edge
+    cum_power = np.cumsum(Pxx)
     
-    # Find frequency range containing 99% power
-    cumsum_power = np.cumsum(psd) / total_power
+    # Find indices where cum power crosses 0.5% and 99.5%
+    # (Leaving 0.5% on each tail = 1% total excluded)
+    lower_bound_power = 0.005 * total_power
+    upper_bound_power = 0.995 * total_power
     
-    # Find lower bound (0.5% from bottom)
-    idx_low = np.argmax(cumsum_power >= 0.005)
+    idx_min = np.searchsorted(cum_power, lower_bound_power)
+    idx_max = np.searchsorted(cum_power, upper_bound_power)
     
-    # Find upper bound (99.5% from bottom = 0.5% from top)
-    idx_high = np.argmax(cumsum_power >= 0.995)
-    
-    bandwidth = f[idx_high] - f[idx_low]
-    
-    return bandwidth, f, psd
+    bw = f[idx_max] - f[idx_min]
+    return bw
 
 
 def calculate_snr(clean_ref, noisy_sig):
