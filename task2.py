@@ -185,7 +185,7 @@ def run_task2_audio():
     plt.tight_layout()
     os.makedirs("outputs/task2", exist_ok=True)
     plt.savefig('outputs/task2/graphs_results.png')
-    plt.show()
+    # plt.show()
 
     os.makedirs("outputs/task2", exist_ok=True)
 

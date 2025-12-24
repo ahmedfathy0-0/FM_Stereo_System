@@ -15,7 +15,7 @@ def run_task_1():
     print("--- Running Task 1: Frequency Deviation Effects ---")
     
     # 1. Setup
-    filename = "audio/test1.wav"  # Ensure you have a WAV file here
+    filename = "audio/stereo.wav"  # Ensure you have a WAV file here
     left_src, right_src, fs_audio = load_audio(filename)
     
     # Use 5 seconds of audio
