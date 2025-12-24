@@ -22,13 +22,28 @@ def add_awgn(signal_in, snr_db):
     
     # Generate noise
     if np.iscomplexobj(signal_in):
-        noise = np.sqrt(noise_power / 2) * (np.random.randn(len(signal_in)) + 
-                                             1j * np.random.randn(len(signal_in)))
+        noise = np.sqrt(noise_power / 2) * (np.random.randn(*signal_in.shape) + 
+                                             1j * np.random.randn(*signal_in.shape))
     else:
-        noise = np.sqrt(noise_power) * np.random.randn(len(signal_in))
+        noise = np.sqrt(noise_power) * np.random.randn(*signal_in.shape)
     
     return signal_in + noise
 
+def add_awgn_complex(signal_in, snr_db):
+    """Adds Complex Gaussian Noise to a signal for a given SNR."""
+    # Signal Power (Assume Amplitude 1 -> Power 1 for complex exp)
+    P_sig = 1.0 
+    
+    # SNR_dB = 10 * log10(P_sig / P_noise)
+    # P_noise = P_sig / 10^(SNR/10)
+    P_noise = P_sig / (10 ** (snr_db / 10))
+    
+    # Generate Noise (Complex)
+    # Variance per dimension is P_noise / 2
+    noise_std = np.sqrt(P_noise / 2)
+    noise = noise_std * (np.random.randn(*signal_in.shape) + 1j * np.random.randn(*signal_in.shape))
+    
+    return (signal_in + noise)
 
 def measure_bandwidth_99(signal_in, fs):
     """
@@ -72,58 +87,24 @@ def measure_bandwidth_99(signal_in, fs):
     return bandwidth, f, psd
 
 
-def calculate_snr(original, received):
+def calculate_snr(clean_ref, noisy_sig):
     """
-    Calculate SNR between original and received signals.
-    
-    Args:
-        original: Original signal
-        received: Received signal (should be same length)
-        
-    Returns:
-        SNR in dB
+    Calculates SNR by comparing Noisy Output against Clean Output.
+    SNR = Power(Clean) / Power(Noisy - Clean)
     """
-    # Ensure same length
-    min_len = min(len(original), len(received))
-    original = original[:min_len]
-    received = received[:min_len]
+    # Ensure lengths match
+    min_len = min(len(clean_ref), len(noisy_sig))
+    clean = clean_ref[:min_len]
+    noisy = noisy_sig[:min_len]
     
-    # Normalize signals
-    if np.max(np.abs(original)) > 0:
-        original = original / np.max(np.abs(original))
-    if np.max(np.abs(received)) > 0:
-        received = received / np.max(np.abs(received))
+    # Error signal (Noise)
+    noise_component = noisy - clean
     
-    # Cross-correlate to find best alignment using FFT (much faster)
-    # Use scipy.signal.correlate instead of np.correlate for FFT speedup
-    correlation = signal.correlate(received, original, mode='full', method='fft')
-    lag = np.argmax(np.abs(correlation)) - len(original) + 1
+    p_signal = np.mean(clean**2)
+    p_noise = np.mean(noise_component**2)
     
-    # Align signals
-    if lag > 0:
-        original = original[:-lag] if lag < len(original) else original
-        received = received[lag:] if lag < len(received) else received
-    elif lag < 0:
-        received = received[:lag] if -lag < len(received) else received
-        original = original[-lag:] if -lag < len(original) else original
-    
-    # Ensure same length after alignment
-    min_len = min(len(original), len(received))
-    original = original[:min_len]
-    received = received[:min_len]
-    
-    # Calculate signal power and noise power
-    signal_power = np.mean(original ** 2)
-    noise = received - original
-    noise_power = np.mean(noise ** 2)
-    
-    if noise_power < 1e-10:
-        return 100  # Very high SNR (essentially no noise)
-    
-    snr_db = 10 * np.log10(signal_power / noise_power)
-    
-    return snr_db
-
+    if p_noise == 0: return 100.0
+    return 10 * np.log10(p_signal / p_noise)
 
 def load_audio(path1):
     # Mode 1: Single file (Stereo or Mono)
