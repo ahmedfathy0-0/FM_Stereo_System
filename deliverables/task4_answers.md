@@ -17,46 +17,46 @@ We designed Butterworth bandpass filters centered at 19 kHz with a bandwidth of 
 
 ## 2. Channel Separation Analysis
 
-We measured channel separation by transmitting a **Left-only** signal (from `audio/stereo.wav`) and measuring the RMS energy leakage into the **Right** (silent) channel after demodulation.
+We measured channel separation in **both directions** to ensure symmetry:
+
+1. **L $\to$ R Leakage**: Transmitting Left-only, measuring noise in Right.
+2. **R $\to$ L Leakage**: Transmitting Right-only, measuring noise in Left.
 
 ### Results
 
-| Filter Order | Left RMS (Signal) | Right RMS (Noise/Leakage) | Separation (dB) |
-| :----------: | :---------------: | :-----------------------: | :-------------: |
-|    **4**     |      0.1972       |          0.0219           |  **19.08 dB**   |
-|    **8**     |      0.1972       |          0.0309           |    16.10 dB     |
-|    **12**    |      0.1971       |          0.0355           |    14.90 dB     |
+| Filter Order |   Mode    | Signal RMS | Leakage RMS | Separation (dB) |
+| :----------: | :-------: | :--------: | :---------: | :-------------: |
+|    **4**     | L $\to$ R |   0.1972   |   0.0219    |  **19.08 dB**   |
+|    **4**     | R $\to$ L |   0.2055   |   0.0230    |  **19.03 dB**   |
+|              |           |            |             |                 |
+|    **8**     | L $\to$ R |   0.1972   |   0.0309    |    16.10 dB     |
+|    **8**     | R $\to$ L |   0.2055   |   0.0323    |    16.08 dB     |
+|              |           |            |             |                 |
+|    **12**    | L $\to$ R |   0.1971   |   0.0355    |    14.90 dB     |
+|    **12**    | R $\to$ L |   0.2054   |   0.0370    |    14.88 dB     |
 
 ![Separation Trend](../outputs/task4/separation_trend.png)
 
 ### Key Finding: Inverse Relationship
 
-The results show a clear trend: **As the filter order increases, Channel Separation decreases.**
-
-**Why?**
-
-- FM Stereo Demodulation requires the regenerated 38 kHz subcarrier to be **phase-locked** to the incoming pilot.
-- The `sosfilt` implementation (causal filtering) applies a phase delay to the extracted pilot.
-- As the filter order increases, this phase delay increases significantly.
-- This creates a **phase mismatch** between the reconstructed subcarrier and the L-R encoded signal.
-- In synchronous detection, phase error $\phi$ reduces the desired signal by $\cos(\phi)$ and, more critically, introduces cross-talk (leakage) between channels.
+The results show a clear trend: **As the filter order increases, Channel Separation decreases.** Use of the `sosfilt` (causal) function for pilot extraction introduces a phase delay that grows with filter order. This desynchronizes the regenerated 38 kHz carrier from the payload, causing leakage.
 
 ## 3. Time-Domain Signal Recovery
 
-The following plots show the recovered Left (Signal) and Right (Silence) channels. Ideally, the Red line (Right) should be a flat line at zero.
+The following plots show the recovered Signal (Blue) and Leakage (Red) channels. Ideally, the Red line should be flat (silence).
 
 ### Order 4 (Best Separation)
 
-![Waveform Order 4](../outputs/task4/waveform_order_4.png)
+![Waveform Order 4 L->R](../outputs/task4/waveform_order_4_L_to_R.png)
 
 ### Order 8
 
-![Waveform Order 8](../outputs/task4/waveform_order_8.png)
+![Waveform Order 8 L->R](../outputs/task4/waveform_order_8_L_to_R.png)
 
 ### Order 12 (Worst Separation)
 
-![Waveform Order 12](../outputs/task4/waveform_order_12.png)
-_Note how the amplitude of the "noise" on the Right channel (Red) noticeably increases as the filter order goes up._
+![Waveform Order 12 L->R](../outputs/task4/waveform_order_12_L_to_R.png)
+_Note how the amplitude of the "noise" on the silent channel (Red) increases as the filter order goes up._
 
 ## 4. Conclusion
 
