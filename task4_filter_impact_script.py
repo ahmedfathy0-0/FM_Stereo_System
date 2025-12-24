@@ -47,11 +47,18 @@ for order in ORDERS:
         l_out = signal.resample(l_out, len(left_src))
         r_out = signal.resample(r_out, len(left_src))
         
+        src_sig_max = np.max(np.abs(left_src)) # Original source max
         rec_sig = l_out if src == 'left' else r_out
         rec_leak = r_out if src == 'left' else l_out
         
+        gain_corr = src_sig_max / (np.max(np.abs(rec_sig)) + 1e-9)
+        l_out *= gain_corr
+        r_out *= gain_corr
+
+        # Metrics
         rms_sig = np.sqrt(np.mean(rec_sig**2))
         rms_leak = np.sqrt(np.mean(rec_leak**2))
+        
         sep = 20 * np.log10(rms_sig / rms_leak) if rms_leak > 1e-9 else 100.0
         
         if mode == 'L_to_R': sep_lr.append(sep)
