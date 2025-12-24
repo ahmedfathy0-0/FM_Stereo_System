@@ -46,7 +46,7 @@ def run_task2_audio():
     # ==========================================
     # 1. SETUP & AUDIO LOADING
     # ==========================================
-    filename = "audio/test1.wav"  # Ensure this path is correct
+    filename = "audio/stereo.wav"  # Ensure this path is correct
     left_src, right_src, fs_audio = load_audio(filename)
 
     silence = np.zeros_like(left_src)
