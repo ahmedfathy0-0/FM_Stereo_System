@@ -9,7 +9,7 @@ from fm_stereo_system import FMTransmitter, FMReceiver
 OUTPUT_DIR = os.path.join('outputs', 'task4')
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-INPUT_AUDIO_PATH = 'audio/s.wav'
+INPUT_AUDIO_PATH = 'audio/stereo.wav'
 PILOT_FREQ = 19000
 FS_MPX = 200000  
 FS_TX = 250000      
@@ -80,10 +80,8 @@ for order in ORDERS:
     l_rec *= gain_corr
     r_rec *= gain_corr
 
-    # Trim edges (5%) to avoid transient artifacts
-    trim = int(len(l_rec) * 0.05)
-    rms_l = np.sqrt(np.mean(l_rec[trim:-trim]**2))
-    rms_r = np.sqrt(np.mean(r_rec[trim:-trim]**2))
+    rms_l = np.sqrt(np.mean(l_rec**2))
+    rms_r = np.sqrt(np.mean(r_rec**2))
     
     sep_db = 20 * np.log10(rms_l / rms_r) if rms_r > 1e-9 else 100.0
     separations.append(sep_db)
@@ -92,29 +90,30 @@ for order in ORDERS:
     results_log.append(log_entry)
     print(f"  -> {log_entry}")
     
-    # H. Save Audio
     l_int = np.int16(np.clip(l_rec, -1, 1) * 32767)
     r_int = np.int16(np.clip(r_rec, -1, 1) * 32767)
   
-    # I. Plot Waveform Snapshot (Visual Check)
+    n_plot = min(len(t_audio), int(6 * fs_audio))
+    
     plt.figure(figsize=(12, 6))
     plt.subplot(2, 1, 1)
-    plt.plot(t_audio[:1000]*1000, l_rec[:1000], 'b', label='Recovered Left')
+    plt.plot(t_audio[:n_plot], l_rec[:n_plot], 'b', label='Recovered Left')
     plt.title(f'Recovered Audio - Order {order} (Left should be signal)')
     plt.grid(alpha=0.3)
     plt.ylabel('Amplitude')
+    plt.ylim([-1, 1])
     
     plt.subplot(2, 1, 2)
-    plt.plot(t_audio[:1000]*1000, r_rec[:1000], 'r', label='Recovered Right')
+    plt.plot(t_audio[:n_plot], r_rec[:n_plot], 'r', label='Recovered Right')
     plt.title(f'Recovered Audio - Order {order} (Right should be silence)')
     plt.grid(alpha=0.3)
-    plt.xlabel('Time (ms)')
+    plt.xlabel('Time (s)')
     plt.ylabel('Amplitude')
+    plt.ylim([-1, 1])
     plt.tight_layout()
     plt.savefig(os.path.join(OUTPUT_DIR, f'waveform_order_{order}.png'))
     plt.close()
 
-# 3. Generate Task Plots
 print("\n--- Generating Summary Plots ---")
 
 plot_filter_responses(ORDERS, FS_MPX, os.path.join(OUTPUT_DIR, 'filter_responses.png'))

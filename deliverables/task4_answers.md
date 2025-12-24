@@ -1,74 +1,63 @@
-# Task 4: Filter Design Impact - Complete Answers
+# Task 4: Filter Design Impact Analysis
 
 ## Objective
 
-Investigate how the order of the pilot extraction bandpass filter affects audio quality in an FM stereo system.
+Analyze how the order of the Pilot Bandpass Filter (BPF) affects the performance of the FM stereo receiver, specifically focusing on **Channel Separation** and signal recovery quality.
 
-**Filter Orders Tested:** 4, 8, 12  
-**Audio Source:** `audio/stereo.wav` (11.68 seconds real stereo audio)
+## 1. Pilot Extraction Filter Response
 
----
+We designed Butterworth bandpass filters centered at 19 kHz with a bandwidth of 1 kHz ($19 \pm 0.5$ kHz) for varying orders ($N \in \{4, 8, 12\}$).
 
-## Original Audio (Before FM Modulation)
+![Filter Frequency Responses](../outputs/task4/filter_responses.png)
 
-![Original Audio](../outputs/task4_original_audio.png)
+**Observation:**
 
-This shows the Left and Right channels of the stereo audio **before** it goes through the FM stereo system.
+- Higher order filters provide sharper roll-off and better isolation of the pilot tone from adjacent noise/signals.
+- However, higher order IIR filters (like the Butterworth used here) introduce larger **phase delays** (group delay), particularly near the cutoff edges.
 
----
+## 2. Channel Separation Analysis
 
-## a) RMS Error Measurements
+We measured channel separation by transmitting a **Left-only** signal (from `audio/stereo.wav`) and measuring the RMS energy leakage into the **Right** (silent) channel after demodulation.
 
-| Filter Order | Left RMS Error | Right RMS Error |
-| ------------ | -------------- | --------------- |
-| 4            | 0.0388         | 0.0416          |
-| 8            | 0.0403         | 0.0428          |
-| 12           | 0.0414         | 0.0436          |
+### Results
 
-**Observation:** Lower filter order provides slightly better audio recovery (lower error).
+| Filter Order | Left RMS (Signal) | Right RMS (Noise/Leakage) | Separation (dB) |
+| :----------: | :---------------: | :-----------------------: | :-------------: |
+|    **4**     |      0.1972       |          0.0219           |  **19.08 dB**   |
+|    **8**     |      0.1972       |          0.0309           |    16.10 dB     |
+|    **12**    |      0.1971       |          0.0355           |    14.90 dB     |
 
----
+![Separation Trend](../outputs/task4/separation_trend.png)
 
-## Original vs Recovered Comparison
+### Key Finding: Inverse Relationship
 
-_(Run the notebook to generate: `outputs/task4_recovered_comparison.png`)_
+The results show a clear trend: **As the filter order increases, Channel Separation decreases.**
 
-This plot shows:
+**Why?**
 
-- **Solid lines:** Original audio
-- **Dashed lines:** Recovered audio after FM stereo transmission
+- FM Stereo Demodulation requires the regenerated 38 kHz subcarrier to be **phase-locked** to the incoming pilot.
+- The `sosfilt` implementation (causal filtering) applies a phase delay to the extracted pilot.
+- As the filter order increases, this phase delay increases significantly.
+- This creates a **phase mismatch** between the reconstructed subcarrier and the L-R encoded signal.
+- In synchronous detection, phase error $\phi$ reduces the desired signal by $\cos(\phi)$ and, more critically, introduces cross-talk (leakage) between channels.
 
-Lower error = better match between original and recovered.
+## 3. Time-Domain Signal Recovery
 
----
+The following plots show the recovered Left (Signal) and Right (Silence) channels. Ideally, the Red line (Right) should be a flat line at zero.
 
-## b) Filter Frequency Responses
+### Order 4 (Best Separation)
 
-_(Run the notebook to generate: `outputs/task4_filter_response.png`)_
+![Waveform Order 4](../outputs/task4/waveform_order_4.png)
 
-The pilot extraction filters are bandpass filters centered at 19 kHz:
+### Order 8
 
-- **Order 4:** Widest passband, gentlest roll-off
-- **Order 8:** Moderate selectivity
-- **Order 12:** Steepest roll-off, narrowest passband
+![Waveform Order 8](../outputs/task4/waveform_order_8.png)
 
----
+### Order 12 (Worst Separation)
 
-## c) Trade-offs: Is Higher Order Always Better?
+![Waveform Order 12](../outputs/task4/waveform_order_12.png)
+_Note how the amplitude of the "noise" on the Right channel (Red) noticeably increases as the filter order goes up._
 
-**Answer: NO**
+## 4. Conclusion
 
-### Pros of Higher Order:
-
-- Better frequency selectivity
-- Improved noise rejection
-
-### Cons of Higher Order:
-
-- **More phase distortion** → degrades 38 kHz subcarrier synchronization
-- **Longer settling time** → transient errors
-- **Higher computational cost**
-
-### Recommendation:
-
-**Order 4-6** provides the best balance for FM stereo pilot extraction.
+While higher-order filters are generally desirable for rejecting noise and interferers, in the context of **coherent FM demodulation**, they introduce detrimental phase shifts. Without delay compensation (or using zero-phase filtering like `filtfilt`), **lower-order filters (Order 4)** generally yield better stereo separation because they maintain tighter phase alignment between the pilot and the multiplexed signal.

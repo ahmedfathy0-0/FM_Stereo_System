@@ -1,0 +1,15 @@
+=== Task 4: Filter Design Impact Analysis ===
+Condition: Left Channel = Audio, Right Channel = Silence
+Metric: Separation(dB) = 20 * log10(RMS_Left / RMS_Right)
+
+Order      Left RMS        Right RMS       Separation (dB)     
+------------------------------------------------------------
+4          0.1972          0.0219          19.08               
+8          0.1972          0.0309          16.10               
+12         0.1971          0.0355          14.90               
+------------------------------------------------------------
+
+Observation:
+As filter order increases, the phase delay of the extracted pilot increases.
+This desynchronizes the 38kHz carrier regeneration, causing leakage (crosstalk)
+into the Right channel, thereby reducing separation.
