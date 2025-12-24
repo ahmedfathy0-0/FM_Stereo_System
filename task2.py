@@ -187,5 +187,22 @@ def run_task2_audio():
     plt.savefig('outputs/task2/graphs_results.png')
     plt.show()
 
+    os.makedirs("outputs/task2", exist_ok=True)
+
+    with open("outputs/task2/results.txt", "w") as f:
+        f.write("Task 2: Noise Immunity Analysis\n")
+        f.write("-------------------------------------------------------\n")
+        f.write(f"{'In SNR':<8} | {'Out SNR':<8} | {'Sep L->R':<10} | {'Sep R->L':<10} | {'THD (%)':<8}\n")
+        f.write("-" * 65 + "\n")
+
+        for i in range(len(results["snr_in"])):
+            f.write(
+                f"{results['snr_in'][i]:<8} | "
+                f"{results['snr_out'][i]:<8.2f} | "
+                f"{results['sep_lr'][i]:<10.2f} | "
+                f"{results['sep_rl'][i]:<10.2f} | "
+                f"{results['thd'][i]:<8.2f}\n"
+            )
+
 if __name__ == "__main__":
     run_task2_audio()
