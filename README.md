@@ -27,7 +27,7 @@ Theoretical Bandwidth is calculated using **Carson's Rule**: $B_{theo} = 2(\Delt
 
 We measured the Output SNR for a fixed Input SNR of **25 dB**.
 
-![Deviation vs SNR](./outputs/task1/task1_deviation_vs_snr.png)
+![Deviation vs SNR](./outputs/task1/deviation_vs_snr.png)
 
 ### c) Trade-off and Recommendation
 
