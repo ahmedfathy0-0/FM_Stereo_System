@@ -1,11 +1,4 @@
 # FM Stereo Receiver System - Final Project Report
-
-**Students:**
-
-- Ahmed Fathy 9230162
-- Ziad Montaser 9231142
-
-
 ---
 
 # Task 1: Frequency Deviation Effects
