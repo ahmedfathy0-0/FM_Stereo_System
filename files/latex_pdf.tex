@@ -190,9 +190,6 @@ The \textbf{FM Threshold Effect} occurs when the noise vector amplitude occasion
 % ----------------------------------------------------------------------
 \section{Task 3: Channel Separation Analysis}
 
-\subsection{Objective}
-Quantify the baseline channel separation of the FM Stereo Receiver and identify the components limiting its performance.
-
 \subsection{Measurement}
 We injected a \textbf{1 kHz tone} into the Left channel (Right = Silence) and measured the recovered RMS levels.
 
@@ -227,9 +224,6 @@ The primary limiting factor is the \textbf{Pilot Extraction Filter}.
 % PAGE 6: TASK 4
 % ----------------------------------------------------------------------
 \section{Task 4: Filter Design Impact Analysis}
-
-\subsection{Objective}
-Analyze how the order of the Pilot Bandpass Filter (BPF) affects the performance of the FM stereo receiver, specifically focusing on \textbf{Channel Separation} and signal recovery quality.
 
 \subsection{1. Pilot Extraction Filter Response}
 We designed Butterworth bandpass filters centered at 19 kHz with a bandwidth of 1 kHz ($19 \pm 0.5$ kHz) for varying orders ($N \in \{4, 8, 12\}$).
@@ -311,9 +305,6 @@ While higher-order filters are generally desirable for rejecting noise and inter
 % PAGE 7: TASK 5
 % ----------------------------------------------------------------------
 \section{Task 5: System Robustness Analysis}
-
-\subsection{Objective}
-Assess the robustness of the FM Stereo Receiver against pilot tone frequency errors ($\pm 500$ Hz), which commonly occur due to oscillator drift in real hardware.
 
 \subsection{Results}
 
